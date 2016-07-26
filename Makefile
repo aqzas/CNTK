@@ -29,10 +29,12 @@
 #     If not specified, CNTK will be be built without cuDNN.
 #   KALDI_PATH= Path to Kaldi
 #     If not specified, Kaldi plugins will not be built
-#   OPENCV_PATH= path to OpenCV 3.0.0 installation, so $(OPENCV_PATH) exists
-#     defaults to /usr/local/opencv-3.0.0
+#   OPENCV_PATH= path to OpenCV 3.1.0 installation, so $(OPENCV_PATH) exists
+#     defaults to /usr/local/opencv-3.1.0
 #   LIBZIP_PATH= path to libzip installation, so $(LIBZIP_PATH) exists
 #     defaults to /usr/local/
+#   BOOST_PATH= path to Boost installation, so $(BOOST_PATH)/include/boost/test/unit_test.hpp
+#     defaults to /usr/local/boost-1.60.0
 # These can be overridden on the command line, e.g. make BUILDTYPE=debug
 
 # TODO: Build static libraries for common dependencies that are shared by multiple 
@@ -802,10 +804,11 @@ $(CNTK_CORE_BS): $(SOURCEDIR)/CNTK/BrainScript/CNTKCoreLib/CNTK.core.bs
 ########################################
 # Unit Tests
 ########################################
+ifneq ("$(BOOST_PATH)", "")
 
-# use system pre-installed Boost libraries
-# Todo: use our own version of boost libraries 
-BOOSTLIB_PATH = /usr/local/lib
+INCLUDEPATH += $(BOOST_PATH)/include
+
+BOOSTLIB_PATH = $(BOOST_PATH)/lib
 BOOSTLIBS := boost_unit_test_framework boost_filesystem boost_system
 
 UNITTEST_EVAL_SRC = \
@@ -815,7 +818,7 @@ UNITTEST_EVAL_SRC = \
 UNITTEST_EVAL_OBJ := $(patsubst %.cpp, $(OBJDIR)/%.o, $(UNITTEST_EVAL_SRC))
 
 UNITTEST_EVAL := $(BINDIR)/evaltests
-# Temporarily not build unit tests as the docker image does not include boost.
+
 ALL += $(UNITTEST_EVAL)
 SRC += $(UNITTEST_EVAL_SRC)
 
@@ -841,7 +844,7 @@ UNITTEST_READER_SRC = \
 UNITTEST_READER_OBJ := $(patsubst %.cpp, $(OBJDIR)/%.o, $(UNITTEST_READER_SRC))
 
 UNITTEST_READER := $(BINDIR)/readertests
-# Temporarily not build unit tests as the docker image does not include boost.
+
 ALL += $(UNITTEST_READER)
 SRC += $(UNITTEST_READER_SRC)
 
@@ -875,7 +878,7 @@ UNITTEST_NETWORK_SRC += $(SGDLIB_SRC)
 UNITTEST_NETWORK_OBJ := $(patsubst %.cu, $(OBJDIR)/%.o, $(patsubst %.cpp, $(OBJDIR)/%.o, $(UNITTEST_NETWORK_SRC)))
 
 UNITTEST_NETWORK := $(BINDIR)/networktests
-# Temporarily not build unit tests as the docker image does not include boost.
+
 ALL += $(UNITTEST_NETWORK)
 SRC += $(UNITTEST_NETWORK_SRC)
 
@@ -907,7 +910,7 @@ UNITTEST_MATH_SRC = \
 UNITTEST_MATH_OBJ := $(patsubst %.cpp, $(OBJDIR)/%.o, $(UNITTEST_MATH_SRC))
 
 UNITTEST_MATH := $(BINDIR)/mathtests
-# Temporarily not build unit tests as the docker image does not include boost.
+
 ALL += $(UNITTEST_MATH)
 SRC += $(UNITTEST_MATH_SRC)
 
@@ -919,6 +922,7 @@ $(UNITTEST_MATH): $(UNITTEST_MATH_OBJ) | $(CNTKMATH_LIB)
 
 unittests: $(UNITTEST_EVAL) $(UNITTEST_READER) $(UNITTEST_NETWORK) $(UNITTEST_MATH)
 
+endif
 
 ########################################
 # General compile and dependency rules
